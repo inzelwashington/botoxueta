@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ПЯТИЛИТРУХА БАГБИРА: Рейс на Альфа-Центавру</title>
+<meta name="description" content="Сурдин и научпопный советский алкаш летят в купе советского электропоезда на Альфа-Центавру. Вопрос один: ХВАТИТ ЛИ ПЯТИЛИТРУХИ?">
+<meta name="theme-color" content="#0a0d14">
+<meta property="og:title" content="ПЯТИЛИТРУХА БАГБИРА">
+<meta property="og:description" content="Хватит ли пятилитрухи, чтобы долететь до Альфа-Центавры? 67 ризз СУРДИН.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🍾</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="crt"></div>
+<div id="flash"></div>
+
+<div id="app">
+
+  <!-- ======================= ЛЕВАЯ ПАНЕЛЬ: ресурсы ======================= -->
+  <aside id="hud" class="panel">
+    <div class="panel-inner">
+      <header class="brand">
+        <div class="brand-mark">🚂</div>
+        <div class="brand-text">
+          <h1>ПЯТИЛИТРУХА<br><span>БАГБИРА</span></h1>
+          <p class="sub">рейс №&nbsp;67 · Земля&nbsp;→&nbsp;Альфа-Центавра</p>
+        </div>
+      </header>
+
+      <section class="meters" id="meters"></section>
+
+      <section class="crew" id="crew"></section>
+
+      <section class="inv">
+        <h2 class="cap">ИНВЕНТАРЬ</h2>
+        <div class="inv-slots" id="inv"></div>
+      </section>
+
+      <section class="mods">
+        <h2 class="cap">СОСТОЯНИЯ</h2>
+        <div class="mod-chips" id="mods"><span class="empty">чисто, как в вагоне-музее</span></div>
+      </section>
+
+      <footer class="clock">
+        <span id="stat-turns">ХОД 0</span>
+        <span id="stat-hours">08:00</span>
+      </footer>
+    </div>
+  </aside>
+
+  <!-- ======================= ЦЕНТР: сцена + текст ======================= -->
+  <main id="stage">
+
+    <div id="scene-wrap">
+      <canvas id="scene"></canvas>
+
+      <div id="viewport" class="vp">
+        <div class="vp-head">
+          <span class="vp-live">● В ЭФИРЕ</span>
+          <span id="vp-title">ТЕЛЕПРИЁМНИК «РАДИОТОЧКА»</span>
+          <button id="vp-hush" class="mini" title="Заглушить">🔇</button>
+        </div>
+        <p id="vp-text">…</p>
+      </div>
+
+      <div id="toasts" class="toasts"></div>
+
+      <div id="mg" class="mg" hidden>
+        <div class="mg-panel">
+          <h3 id="mg-title">МИНИ-ИГРА</h3>
+          <p id="mg-hint">…</p>
+          <canvas id="mg-canvas"></canvas>
+          <div id="mg-hud" class="mg-hud"></div>
+          <button id="mg-skip" class="mini">забить (пропустить)</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="text-zone">
+      <div id="place" class="place"></div>
+
+      <div id="card" class="card">
+        <div class="card-top">
+          <span id="card-tag" class="tag">СОБЫТИЕ</span>
+          <span id="card-num" class="num"></span>
+        </div>
+        <h2 id="card-title">…</h2>
+        <p id="card-text">…</p>
+        <div id="choices" class="choices"></div>
+      </div>
+
+      <div id="actions" class="actions"></div>
+      <div id="log" class="log"></div>
+    </div>
+  </main>
+
+  <!-- ======================= ПРАВАЯ ПАНЕЛЬ: маршрут ======================= -->
+  <aside id="right" class="panel">
+    <div class="panel-inner">
+      <h2 class="cap">МАРШРУТ</h2>
+      <div class="route-head">
+        <div class="route-now">
+          <small>СЛЕДУЮЩАЯ</small>
+          <strong id="route-next">—</strong>
+        </div>
+        <div class="route-km">
+          <strong id="route-left">4.10</strong>
+          <small>св. лет</small>
+        </div>
+      </div>
+      <div class="route-bar"><i id="route-fill"></i></div>
+
+      <h2 class="cap">ПОЕЗДНАЯ БРИГАДА</h2>
+      <ul class="crew-list" id="crew-list"></ul>
+
+      <h2 class="cap">ХРОНИКА РЕЙСА</h2>
+      <div id="ticker" class="ticker"></div>
+
+      <footer class="foot">
+        <div class="keys">
+          <span>1..6 — действия</span>
+          <span>ЛКМ/тап — выбор</span>
+          <span>R — рестарт</span>
+        </div>
+        <div class="seed">семя рейса <b id="seed">—</b></div>
+      </footer>
+    </div>
+  </aside>
+</div>
+
+<!-- ======================= ЭКРАНЫ ======================= -->
+<div id="screen" class="screen">
+  <div class="screen-box">
+    <div id="screen-body"></div>
+  </div>
+</div>
+
+<button id="btn-sound" class="sound-btn" title="Звук">🔊</button>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

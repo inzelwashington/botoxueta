@@ -1,0 +1,12 @@
+# зависимости (проект их не требует, но пусть не попадёт в репозиторий)
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+
+# служебное
+.DS_Store
+Thumbs.db
+*.log
+_site/
+.vscode/
+.idea/
