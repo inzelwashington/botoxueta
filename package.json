@@ -5,8 +5,8 @@
   "description": "ПЯТИЛИТРУХА БАГБИРА — рейс №67 на Альфа-Центавру. Сурдин, научпопный советский алкаш и один пятилитровый вопрос.",
   "type": "module",
   "scripts": {
-    "start": "python -m http.server 8777",
-    "dev": "python -m http.server 8777",
+    "start": "node tools/dev-server.mjs",
+    "dev": "node tools/dev-server.mjs",
     "test": "node tools/smoke.mjs && node tools/runtime-test.mjs && node tools/check-dom.mjs",
     "test:balance": "node tools/smoke.mjs",
     "test:runtime": "node tools/runtime-test.mjs",

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>ИЗМЕРЕНИЕ РАСКЛАДКИ</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  /* страница диагностики: ничего не должно мешать измерениям */
+  #diag{position:fixed;left:0;top:0;z-index:9999;background:#000;color:#0f0;font:12px monospace;padding:6px;max-height:100vh;overflow:auto;white-space:pre;display:none}
+  body.ready #diag{display:block}
+</style>
+</head>
+<body>
+<pre id="diag">ЖДУ…</pre>
+
+<div id="app">
+  <header id="topbar">
+    <div class="tb-left">
+      <span class="tb-logo">🚂</span>
+      <div class="tb-route"><strong id="tb-station">● ЗЕМЛЯ → ЛУНА</strong><small>перегон <b>3</b>/24</small></div>
+    </div>
+    <div class="tb-bar"><i style="width:20%"></i><span>🚂</span></div>
+    <button id="tb-details" class="tb-btn">▾ подробности</button>
+    <span id="tb-build" class="tb-build">сборка v6</span>
+  </header>
+
+  <section id="scene-wrap">
+    <canvas id="scene" width="1200" height="300" style="background:#080b14"></canvas>
+    <div id="vp" class="vp"><span class="vp-live">●</span><span id="vp-title">РАДИОТОЧКА</span><p id="vp-text">Проверка раскладки.</p></div>
+  </section>
+
+  <section id="chips" class="chips">
+    <div class="chip-res"><i class="fill" style="width:80%"></i><span class="ico">🍾</span><span class="body"><span class="nm">Багбир</span><span class="vl">41,2<small> л</small></span></span></div>
+    <div class="chip-res"><i class="fill" style="width:30%"></i><span class="ico">🌡️</span><span class="body"><span class="nm">Градус</span><span class="vl">30°</span></span></div>
+    <div class="chip-res"><i class="fill" style="width:60%"></i><span class="ico">🧠</span><span class="body"><span class="nm">Вменяем.</span><span class="vl">64</span></span></div>
+    <div class="chip-res"><i class="fill" style="width:40%"></i><span class="ico">🌀</span><span class="body"><span class="nm">Бредометр</span><span class="vl">41</span></span></div>
+    <div class="chip-res"><i class="fill" style="width:60%"></i><span class="ico">🔥</span><span class="body"><span class="nm">Тепло</span><span class="vl">62</span></span></div>
+    <div class="chip-res"><i class="fill" style="width:50%"></i><span class="ico">⛽</span><span class="body"><span class="nm">Бак</span><span class="vl">14,0<small> л</small></span></span></div>
+    <div class="chip-res"><i class="fill" style="width:10%"></i><span class="ico">✨</span><span class="body"><span class="nm">Ризз</span><span class="vl">6</span></span></div>
+    <div class="chip-res"><i class="fill" style="width:20%"></i><span class="ico">🕵️</span><span class="body"><span class="nm">КГБ</span><span class="vl">20</span></span></div>
+  </section>
+
+  <section id="story">
+    <div class="story-grid">
+      <div id="speaker" class="speaker">
+        <div class="sp-face sur" id="sp-face"></div>
+        <div class="sp-name" id="sp-name">СУРДИН</div>
+      </div>
+      <div class="story-text">
+        <div class="story-head"><span class="tag danger" id="card-tag">⚠ ОПАСНО</span><h2 id="card-title">ОТОПЛЕНИЕ</h2></div>
+        <div id="card-text" class="card-text">Печка встала. Через час в вагоне будет <em>минус четыре</em>, а багбир ещё и замёрзнет. Разобрать печку самому — грязно, долго, но эффективно.</div>
+        <div id="narr" class="narr">Стены вагона дышат. Ритм совпадает со стуком колёс, значит, всё правильно.</div>
+      </div>
+    </div>
+    <div id="choices" class="choices">
+      <button class="choice"><b>Разобрать и собрать печку самому</b><small>Грязно, долго, эффективно.</small></button>
+      <button class="choice"><b>Сжечь немного топлива напрямую</b><small>Тепло сейчас, скорость потом.</small><span class="cost">−10 л</span></button>
+      <button class="choice rizz hot"><b>Прочитать лекцию про термодинамику</b><small>Станет жарко от стыда.</small><span class="cost">−3 ризз</span></button>
+    </div>
+  </section>
+
+  <section id="actions" class="actions">
+    <button class="act"><span class="k">1</span><b>Хлебнуть 41 г</b><small>В честь 4,1.</small></button>
+    <button class="act"><span class="k">2</span><b>Выпить 250 г</b><small>Классика жанра.</small></button>
+    <button class="act"><span class="k">3</span><b>Залить в бак</b><small>−0,5 л.</small></button>
+    <button class="act"><span class="k">4</span><b>ТРЯХНУТЬ БУТЫЛЬ</b><small>Ритуал.</small></button>
+    <button class="act"><span class="k">5</span><b>Почитать Сурдина</b><small>+ризз.</small></button>
+    <button class="act"><span class="k">6</span><b>Поспать</b><small>+вменяемость.</small></button>
+    <button class="act go" style="grid-column:1/-1"><b>🚂 ЕДЕМ ДАЛЬШЕ</b><small>Один перегон.</small></button>
+  </section>
+
+  <section id="log" class="log"><div>Рейс №67 начался.</div><div>● СТАНЦИЯ: ЛУНА</div></section>
+</div>
+
+<div id="drawer" class="drawer"><div class="drawer-inner"><h2>ПОДРОБНОСТИ</h2></div></div>
+<div id="screen" class="screen"><div class="screen-box"><div id="screen-body">меню</div></div></div>
+<div id="mg" class="mg" hidden>
+  <div class="mg-panel">
+    <div class="mg-head"><h3 id="mg-title">МИНИ-ИГРА</h3><span id="mg-timer" class="mg-timer">0.0</span></div>
+    <p id="mg-hint">…</p>
+    <canvas id="mg-canvas" width="900" height="380" style="background:#04060c"></canvas>
+    <div class="mg-foot"><div id="mg-score" class="mg-score"></div><button id="mg-skip" class="mini">пропустить ▸</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const out = [];
+  const say = (s) => out.push(s);
+  const R = (sel) => {
+    const el = document.querySelector(sel);
+    if (!el) return { sel, missing: true };
+    const r = el.getBoundingClientRect();
+    const cs = getComputedStyle(el);
+    const clipped = (el.scrollHeight > el.clientHeight + 1) || (el.scrollWidth > el.clientWidth + 1);
+    return {
+      sel,
+      x: Math.round(r.x), y: Math.round(r.y),
+      w: Math.round(r.width), h: Math.round(r.height),
+      bottom: Math.round(r.bottom),
+      scrollH: el.scrollHeight, clientH: el.clientHeight,
+      display: cs.display, overflowY: cs.overflowY,
+      clipped,
+      visible: r.width > 0 && r.height > 0 && r.top < innerHeight && r.bottom > 0,
+    };
+  };
+
+  function run(){
+    say('ОКНО ' + innerWidth + 'x' + innerHeight);
+    say('');
+    const sels = ['#app','#topbar','#scene-wrap','#chips','#story','#story .story-grid','#card-text','#narr',
+                  '#choices','#choices .choice','#choices .choice:nth-child(2)','#actions','#actions .act',
+                  '#log','#vp','#mg','.mg-panel','#mg-canvas','.tb-build'];
+    for (const s of sels){
+      const m = R(s);
+      if (m.missing){ say(s.padEnd(30) + ' НЕТ ЭЛЕМЕНТА'); continue; }
+      say(s.padEnd(30) + ` ${String(m.x).padStart(5)},${String(m.y).padStart(5)}  ${String(m.w).padStart(5)}x${String(m.h).padStart(4)}`
+        + `  низ=${String(m.bottom).padStart(5)}  clientH=${String(m.clientH).padStart(5)} scrollH=${String(m.scrollH).padStart(5)}`
+        + `  ${m.display}/${m.overflowY}` + (m.clipped ? '  ОБРЕЗАНО' : '') + (m.visible ? '' : '  НЕВИДИМ'));
+    }
+    say('');
+    // где кончается история и попадают ли кнопки в экран
+    const story = document.querySelector('#story').getBoundingClientRect();
+    const btns = [...document.querySelectorAll('#choices .choice')].map((b) => {
+      const r = b.getBoundingClientRect();
+      return { inStory: r.bottom <= story.bottom + 1, inView: r.bottom <= innerHeight, bottom: Math.round(r.bottom) };
+    });
+    say(`кнопок выбора: ${btns.length}`);
+    btns.forEach((b, i) => say(`  кнопка ${i}: низ=${b.bottom} внутри истории=${b.inStory} видна=${b.inView}`));
+    const last = btns[btns.length - 1];
+    say(last && !last.inView ? 'ВЫВОД: последняя кнопка выбора ЗА ПРЕДЕЛАМИ ЭКРАНА' : 'ВЫВОД: все кнопки выбора в пределах экрана');
+    const bad = btns.filter((b) => !b.inStory).length;
+    say(bad ? `ВЫВОД: ${bad} кнопок обрезано контейнером истории` : 'ВЫВОД: история не обрезает кнопки');
+
+    const t = R('#topbar');
+    say('');
+    say('верхняя полоса: ' + t.h + ' px, всего строк grid: ' + getComputedStyle(document.querySelector('#app')).gridTemplateRows);
+
+    const d = document.getElementById('diag');
+    d.textContent = out.join('\n');
+    document.body.classList.add('ready');
+  }
+  window.addEventListener('load', () => setTimeout(run, 120));
+})();
+</script>
+</body>
+</html>

@@ -64,6 +64,8 @@ export function createState(seed){
     /* ресурсы */
     bag: 52, grad: 24, vmen: 64, temp: 62, kgb: 6, fuel: 16, rizz: 0,
     speed: 1.6, dist: 0,
+    /* бредометр и инопланетная линия */
+    mad: 8, alien: 0, alienInCar: false,
     /* вспомогательное */
     items: {},
     mods: {},
@@ -175,6 +177,18 @@ export function applyEffect(S, ef){
     }
     case 'time': S.minutes += ef.minutes || 60; break;
     case 'mind': S.mem67 += ef.n || 1; break;
+    case 'mad': {
+      S.mad = clamp(S.mad + ef.delta, 0, 100);
+      if (Math.abs(ef.delta) >= 6)
+        addLog(S, `Бредометр ${ef.delta > 0 ? '+' : ''}${Math.round(ef.delta)}`, ef.delta > 0 ? 'bad' : 'good');
+      break;
+    }
+    case 'alien': {
+      S.alien = clamp((S.alien || 0) + ef.delta, 0, 100);
+      if (ef.delta > 0) addLog(S, `Она заметила: ${Math.round(S.alien)}/100`, 'hi');
+      break;
+    }
+    case 'say': break;   // реплику обрабатывает интерфейс
   }
 }
 
@@ -182,6 +196,7 @@ export function applyEffects(S, list){
   (list || []).forEach((ef) => {
     if (ef.kind === 'log') { addLog(S, ef.text, ef.cls || ''); return; }
     if (ef.kind === 'toast') return;      // тосты обрабатывает UI
+    if (ef.kind === 'say') return;        // реплику обрабатывает UI
     if (ef.kind === 'rizz'){ if (ef.mem) S.mem67 += ef.mem; if (ef.delta) applyEffect(S, ef); return; }
     if (ef.kind === 'hold'){ S.pending = { type: 'hold', text: ef.text }; return; }
     if (ef.kind === 'cursor'){ S.pending = { type: 'rhythm', text: ef.text, goal: ef.goal }; return; }
@@ -202,9 +217,14 @@ export const ACTIONS = [
       applyEffect(S, { kind: 'bag', delta: -amt });
       applyEffect(S, { kind: 'grad', delta: +7 });
       applyEffect(S, { kind: 'vmen', delta: +5 });
+      applyEffect(S, { kind: 'mad', delta: +3 });
       S.stats.drinks++; S.stats.litersDrank += amt;
       sfx.sip();
       addLog(S, '41 грамм — метрологически точно.', 'hi');
+      if (S.mad >= 42 && !S.flags.alienHint){
+        S.flags.alienHint = true;
+        addLog(S, 'За окном что-то мелькнуло. Синее.', 'hi');
+      }
     },
   },
   {
@@ -216,9 +236,14 @@ export const ACTIONS = [
       applyEffect(S, { kind: 'grad', delta: +15 });
       applyEffect(S, { kind: 'vmen', delta: +11 });
       applyEffect(S, { kind: 'speed', delta: +0.3 });
+      applyEffect(S, { kind: 'mad', delta: +7 });
       S.stats.drinks++; S.stats.litersDrank += 0.25;
       sfx.sip();
       addLog(S, 'Сурдин: «Это уже не наука, это практика».', 'hi');
+      if (S.mad >= 42 && !S.flags.alienHint){
+        S.flags.alienHint = true;
+        addLog(S, 'В стекле отразилась женщина. Ты обернулся — в купе только Вася.', 'hi');
+      }
       if (S.grad > 88 && Math.random() < 0.4){
         applyEffect(S, { kind: 'kgb', delta: +7 });
         addLog(S, 'Проводница посмотрела в вашу сторону. Долго.', 'bad');
@@ -395,6 +420,10 @@ export function advanceTrain(S){
   S.kgb = clamp(S.kgb + 1.8, 0, 100);
   S.speed = clamp(S.speed + 0.02, 0.4, 12);
 
+  // --- бредометр: чем больше в тебе градуса, тем хуже работает рассказчик
+  const madDrift = S.grad > 55 ? (S.grad - 55) * 0.055 : -1.6;
+  S.mad = clamp(S.mad + madDrift, 0, 100);
+
   // --- состояния тикают
   for (const k of Object.keys(S.mods)){
     const m = S.mods[k];
@@ -475,6 +504,24 @@ export function winRun(S){
   const left = S.bag;
   const vmen = S.vmen;
   let rank, grade, comment;
+
+  // особый финал: доехали вместе с ней
+  if (S.flags.alienFiance && (S.alien || 0) >= 60){
+    return endRun(S, {
+      id: 'win',
+      title: 'АЛЬФА-ЦЕНТАВРА. ВЫ ПРИЕХАЛИ ВДВОЁМ.',
+      emoji: '💙',
+      text: `Поезд подошёл к станции, и на перроне их встретили трое: два солнца и одна синяя женщина,
+      которая всё это время ехала с вами в тамбуре. Сурдин держал в руках салфетку с расчётами и плакал
+      в неё — но это были хорошие слёзы, научные.`,
+      epi: '«Хватило? Хватило. Но я бы всё равно взял вторую». — Сурдин',
+      rank: 'ХВАТИЛО НА ДВОИХ', grade: 'S+',
+      comment: `Пятилитрухи хватило, чтобы долететь, и ещё осталось на межвидовой тост.
+      Вас будут изучать. Вас уже изучают.`,
+      left, mem: S.mem67, vmen, love: true,
+    });
+  }
+
   if (left >= 26){
     rank = 'АКАДЕМИК СУРДИН'; grade = 'S';
     comment = 'Приехали с запасом, о котором в вагоне будут рассказывать легенды. Пятилитруха смотрит на вас с уважением.';
@@ -528,6 +575,13 @@ export function pickEvent(S){
     if (e.tag === 'good' && S.bag < 12) w *= 1.5;
     if (e.id === 'kgb_check' && S.kgb > 65) w *= 4;
     if (e.id === 'final_check' && S.dist > 3.5) w *= 6;
+    // инопланетная линия: если игрок её начал, продолжение приходит охотнее
+    if (e.love){
+      w *= S.flags.alienMet ? 2.4 : 1.3;
+      if (S.flags.alienMet && !S.flags.alienTambur) w *= 1.6;
+      if (S.alienInCar && !S.flags.alienNight) w *= 1.8;
+      if ((S.alien || 0) >= 60 && !S.flags.alienFiance) w *= 2.2;
+    }
     return { e, w };
   });
   const total = weights.reduce((a, b) => a + b.w, 0) || 1;
@@ -667,6 +721,8 @@ export function summary(S){
     dist: S.dist,
     kgb: S.kgb,
     vmen: S.vmen,
+    mad: S.mad,
+    alien: S.alien || 0,
     prob: Math.round(prob),
   };
 }

@@ -22,6 +22,13 @@ const STRATS = {
   drinker: (S) => S.vmen < 55 ? 'drink' : (S.bag > 20 ? 'shake' : 'leg'),
   hoarder: (S) => S.bag < 12 ? 'read' : 'leg',
   mixed:   (S) => ['pour','drink','shake','read','sleep','leg'][(Math.random()*6)|0],
+  lush:    (S) => {
+    // стратегия «пить, чтобы стало интереснее»: гонит бредометр вверх ради инопланетной линии
+    if (S.flags.alienMet && S.alien < 70 && S.bag > 4) return 'drink';
+    if (S.bag > 10) return Math.random() < 0.3 ? 'shake' : 'drink';
+    if (S.fuel < 3) return 'pour';
+    return 'leg';
+  },
   smart:   (S) => {
     if (S.fuel < 4 && S.bag > 3) return 'pour';
     if (S.vmen < 30 && S.bag > 1) return 'drink';
@@ -37,6 +44,16 @@ const causes = {};
 const ranks = {};
 const lefts = [];
 const turnEnds = [];
+let alienSeen = 0, alienChains = 0, madSum = 0;
+let loveWins = 0, loveRuns = 0;
+
+/** игрок, который целенаправленно идёт по инопланетной линии */
+function chaseAlien(S, choices){
+  const love = choices.filter((c) => c.ok && /она|неё|окн|налить ей|позвать|впустить|вместе|рук|предложить/i.test(c.c.label));
+  if (love.length) return love[0].idx;
+  const ok = choices.filter((c) => c.ok);
+  return ok[(Math.random() * ok.length) | 0].idx;
+}
 
 function playOne(seed, stratName){
   const strat = STRATS[stratName];
@@ -55,7 +72,8 @@ function playOne(seed, stratName){
     const ok = S.currentChoices.filter((c) => c.ok);
     if (!ok.length) throw new Error('все выборы заблокированы: ' + S.currentEvent.id);
     let pickIdx;
-    if (Math.random() < 0.25 && ok.some((c) => c.c.rizz)) pickIdx = ok.filter((c) => c.c.rizz)[(Math.random()*ok.filter((c)=>c.c.rizz).length)|0].idx;
+    if (S.loveChase) pickIdx = chaseAlien(S, ok);
+    else if (Math.random() < 0.25 && ok.some((c) => c.c.rizz)) pickIdx = ok.filter((c) => c.c.rizz)[(Math.random()*ok.filter((c)=>c.c.rizz).length)|0].idx;
     else pickIdx = ok[(Math.random()*ok.length)|0].idx;
     G.resolveChoice(S, pickIdx);
     if (G.checkLoss(S)) break;
@@ -100,6 +118,9 @@ function playOne(seed, stratName){
 
   total++;
   turnEnds.push(turn);
+  madSum += S.mad;
+  if (S.flags.alienMet) alienSeen++;
+  if (S.flags.alienFiance) alienChains++;
   if (S.over && S.over.id === 'win'){
     wins++;
     ranks[S.over.rank] = (ranks[S.over.rank] || 0) + 1;
@@ -121,6 +142,43 @@ for (const name of Object.keys(STRATS)){
   }
   console.log('  ' + name.padEnd(9), 'побед', String(wins - before).padStart(3), '/80');
 }
+
+/* --- целенаправленная погоня за инопланетной линией --- */
+console.log('\n--- ЦЕЛЕНАПРАВЛЕННО ЗА НЕЙ (пьём и выбираем её) ---');
+const savedSeed = G.seedRng;
+void savedSeed;
+for (let i = 0; i < 60; i++){
+  // DBG
+  G.seedRng(5000 + i * 13);
+  const S = G.createState(5000 + i * 13);
+  S.loveChase = true;
+  loveRuns++;
+  try {
+    // играем «lush»-стратегией действий, но выборы — всегда в её пользу
+    let guard = 0;
+    while (!S.over && guard++ < 400){
+      const r = G.beginTurn(S);
+      if (r.done || S.over) break;
+      const ok = S.currentChoices.filter((c) => c.ok);
+      if (!ok.length) break;
+      G.resolveChoice(S, chaseAlien(S, ok));
+      if (G.checkLoss(S)) break;
+      const want = STRATS.lush(S);
+      const all = [...G.ACTIONS, ...G.inventoryActions(S)];
+      if (!['leg','full','drift'].includes(want)){
+        const a = all.find((x) => x.id === want);
+        if (a && (!a.avail || a.avail(S))) a.run(S, { minigame: (k, cb) => cb({ grade: 'good' }), toast(){} });
+      } else {
+        if (want === 'full' && S.bag >= 2.6){ G.applyEffect(S, { kind: 'bag', delta: -2.5 }); G.applyEffect(S, { kind: 'speed', delta: +1.0 }); }
+        else G.applyEffect(S, { kind: 'speed', delta: +0.15 });
+      }
+      if (G.checkLoss(S)) break;
+    }
+  } catch (e){ console.log('  ошибка в погоне:', e.message); }
+  if (S.over && S.over.love) loveWins++;
+  if (i < 8) console.log('    DBG seed', 5000+i*13, 'итог', S.over && S.over.id, '| ход', S.turn, '| путь', S.dist.toFixed(2), '| бред', Math.round(S.mad), '| она', Math.round(S.alien||0), '| флаги', JSON.stringify({met:!!S.flags.alienMet, inCar:!!S.alienInCar, night:!!S.flags.alienNight, fia:!!S.flags.alienFiance}));
+}
+console.log(`  дошли с ней до Альфы: ${loveWins} из ${loveRuns} попыток`);
 
 if (process.env.TRACE){
   const name = process.env.TRACE;
@@ -159,7 +217,7 @@ if (process.env.TRACE){
 const avgLeft = lefts.length ? (lefts.reduce((a, b) => a + b, 0) / lefts.length) : 0;
 const avgTurn = turnEnds.reduce((a, b) => a + b, 0) / turnEnds.length;
 
-console.log('=== ПРОГОН', total, 'РЕЙСОВ ===');
+console.log('--- ПРОГОН', total, 'РЕЙСОВ ---');
 console.log('побед:', wins, '(' + ((wins / total) * 100).toFixed(1) + '%)');
 console.log('крашей/зависаний:', crashes);
 console.log('средний ход окончания:', avgTurn.toFixed(1), 'из', G.MAX_TURNS);
@@ -167,6 +225,7 @@ console.log('средний остаток при победе:', avgLeft.toFixe
 console.log('причины поражений:', causes);
 console.log('ранги:', ranks);
 console.log('событий в пуле:', EVENTS.length);
+console.log('бредометр в среднем:', (madSum / total).toFixed(1), '| знакомство с ней:', alienSeen, '| дошло до финала с ней:', alienChains);
 
 /* --- проверка целостности пула событий --- */
 let schemaErrors = 0;

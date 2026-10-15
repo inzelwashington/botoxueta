@@ -244,6 +244,7 @@ export function stopMusic(){
 /* ---------------------- удобные «мемные» связки -------------------- */
 export const sfx = {
   ui:      () => play('ding', { vol: .35, dedupe: 40 }),
+  ding:    () => play('ding', { vol: .55, dedupe: 40 }),
   hit:     () => play('crack', { vol: .8 }),
   fail:    () => play('bruh', { vol: .9 }),
   good:    () => play('core', { vol: .7 }),
@@ -260,3 +261,6 @@ export const sfx = {
   horn:    () => play('horn', { vol: .8 }),
   station: () => { play('horn', { vol: .8 }); play('ding', { vol: .45, dedupe: 0 }); },
 };
+
+/** Все доступные ключи — тест проверяет, что игра не зовёт несуществующий звук. */
+export const sfxKeys = Object.keys(sfx);
